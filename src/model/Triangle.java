@@ -57,7 +57,7 @@ public class Triangle {
 		double R = (d_ab * d_bc * d_ca) / (4 * area);
 		
 		double dist = R * Math.sin( Math.acos((d_ab/2.0) / R) );
-		Point2D n_ab = new Point.Double(-ab.y / d_ab, ab.x / d_ab);
+		Point2D n_ab = new Point2D.Double(-ab.y / d_ab, ab.x / d_ab);
 		double radian_c = (b.x-c.x)*(a.x-c.x) + (b.y-c.y)*(a.y-c.y);
 		if (radian_c < 0) {
 			dist = -dist;

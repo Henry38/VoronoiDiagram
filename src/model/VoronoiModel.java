@@ -15,7 +15,8 @@ public class VoronoiModel {
 	
 	private EventListenerList listenerList;
 	private HashMap<Point, Color> kernels;
-	private Topology topology;
+	private Topology delaunayTopology;
+	private Topology voronoiTopology;
 	
 	private DelaunayTriangulation dTriangulation;
 	
@@ -23,8 +24,12 @@ public class VoronoiModel {
 	public VoronoiModel() {
 		this.listenerList = new EventListenerList();
 		this.kernels = new HashMap<Point, Color>();
-		this.topology = new Topology();
+		this.delaunayTopology = new Topology();
+		this.voronoiTopology = new Topology();
 		this.dTriangulation = new DelaunayTriangulation();
+		//addKernel(396, 297);
+		//addKernel(273, 105);
+		//addKernel(94,234);
 	}
 	
 	public int getKernelsCount() {
@@ -42,13 +47,18 @@ public class VoronoiModel {
 		return kernels.get(key);
 	}
 	
-	public final Topology getTopology() {
-		return topology;
+	public final Topology getDelaunayTopology() {
+		return delaunayTopology;
+	}
+	
+	public final Topology getVoronoiTopology() {
+		return voronoiTopology;
 	}
 	
 	public void clearAll() {
 		this.kernels.clear();
-		this.topology.clear();
+		this.delaunayTopology.clear();
+		this.voronoiTopology.clear();
 		fireKernelCleared();
 	}
 	
@@ -61,6 +71,7 @@ public class VoronoiModel {
 		kernels.put(key, value);
 		
 		delaunayTriangulation();
+		//voronoiDiagram();
 		
 		fireKernelAdded(key);
 	}
@@ -94,13 +105,32 @@ public class VoronoiModel {
 	}
 	
 	private void delaunayTriangulation() {
-		topology.clear();
+		delaunayTopology.clear();
 		
 		if (getKernelsCount() < 3) {
 			return;
 		}
 		
 		this.dTriangulation.performed();
+	}
+	
+	private void voronoiDiagram() {
+		if (getKernelsCount() == 1) {
+			return;
+		}
+		if (getKernelsCount() == 2) {
+			return;
+		}
+		
+//		for (Point p : getKernels())  {
+//			ArrayList<Triangle> a = new ArrayList<Triangle>();
+//			int polygonCount = delaunayTopology.getPolygonsCount();
+//			for (int i = 0; i < polygonCount; i++) {
+//				if (triangle.contains(p)) {
+//					
+//				}
+//			}
+//		}
 	}
 	
 	/** Private class */
@@ -206,7 +236,7 @@ public class VoronoiModel {
 			
 			// cree la triangulation de Delaunay
 			for (Triangle triangle : triangles) {
-				topology.addTriangle(triangle);
+				delaunayTopology.addTriangle(triangle);
 			}
 		}
 	}

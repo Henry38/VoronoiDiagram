@@ -57,7 +57,7 @@ public class JVoronoi extends JComponent {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				if (getModel() != null) {
-					Topology topology = getModel().getTopology();
+					Topology topology = getModel().getDelaunayTopology();
 					int polygonCount = topology.getPolygonsCount();
 					if (polygonCount > 0) {
 						currentTriangle = (currentTriangle + 1) % polygonCount;
@@ -115,7 +115,7 @@ public class JVoronoi extends JComponent {
 		
 		if (getModel() != null) {
 			
-			Topology topology = getModel().getTopology();
+			Topology topology = getModel().getDelaunayTopology();
 			int polygonCount = topology.getPolygonsCount();
 			
 			for (int key = 0; key < polygonCount; key++) {
@@ -126,8 +126,8 @@ public class JVoronoi extends JComponent {
 				int[] ypoints = new int[npoints];
 				
 				for (int i = 0; i < npoints; i++) {
-					xpoints[i] = (int) vertex.get(index.get(i)).getX();
-					ypoints[i] = (int) vertex.get(index.get(i)).getY();
+					xpoints[i] = (int) vertex.get(index.get(i)).x;
+					ypoints[i] = (int) vertex.get(index.get(i)).y;
 				}
 				
 				//g.setColor(Color.green);
@@ -138,8 +138,8 @@ public class JVoronoi extends JComponent {
 			
 			for (Point p : getModel().getKernels()) {
 				if (p != null) {
-					int x = (int) p.getX();
-					int y = (int) p.getY();
+					int x = (int) p.x;
+					int y = (int) p.y;
 					int w = 8;
 					int h = 8;
 					g.setColor(Color.black);
@@ -180,7 +180,7 @@ public class JVoronoi extends JComponent {
 				double R = (d_ab * d_bc * d_ca) / (4 * area);
 				
 				double dist = R * Math.sin( Math.acos((d_ab/2.0) / R) );
-				Point2D n_ab = new Point.Double(-ab.y / d_ab, ab.x / d_ab);
+				Point2D n_ab = new Point2D.Double(-ab.y / d_ab, ab.x / d_ab);
 				double radian_c = (b.x-c.x)*(a.x-c.x) + (b.y-c.y)*(a.y-c.y);
 				if (radian_c < 0) {
 					dist = -dist;
