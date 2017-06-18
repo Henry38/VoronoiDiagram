@@ -1,6 +1,7 @@
 package view;
 
 import java.awt.Color;
+import java.awt.Graphics;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
@@ -8,7 +9,6 @@ import listener.VoronoiModelListener;
 import math2D.Point2D;
 import model.VoronoiModel;
 import topology.TopologyContainer;
-import viewer2D.geometry.Shape2D;
 import viewer2D.graphic.Viewer2D;
 
 public class JVoronoi extends Viewer2D {
@@ -26,9 +26,9 @@ public class JVoronoi extends Viewer2D {
 		
 		setModel(model);
 		
-//		getCamera().setMoveable(false);
-//		getCamera().setSpinnable(false);
-//		getCamera().setZoomable(false);
+		getCamera().setMoveable(false);
+		getCamera().setSpinnable(false);
+		getCamera().setZoomable(false);
 		
 		this.drawAxis = true;
 		this.drawGrid = false;
@@ -64,6 +64,49 @@ public class JVoronoi extends Viewer2D {
 		firePropertyChange(MODEL_CHANGED_PROPERTY, oldModel, model);
 	}
 	
+	@Override
+	public void paintComponent(Graphics g) {
+		super.paintComponent(g);
+		
+		VoronoiModel voronoiModel = getVoronoiModel();
+				
+		if (voronoiModel != null) {
+			
+			TopologyContainer topology = voronoiModel.getDelaunayTopology();
+			int polygonCount = topology.getPolygonsCount();
+			
+			// draw Delaunay triangulation
+			for (int key = 0; key < polygonCount; key++) {
+				Point2D[] polygon = topology.getPolygon(key);
+				
+				int npoints = polygon.length;
+				int[] xpoints = new int[npoints];
+				int[] ypoints = new int[npoints];
+				
+				for (int i = 0; i < npoints; i++) {
+					Point2D proj_p = screenMVP.transform(polygon[i]);
+					xpoints[i] = (int) proj_p.x;
+					ypoints[i] = (int) proj_p.y;
+				}
+				
+				g.setColor(Color.black);
+				g.drawPolygon(xpoints, ypoints, npoints);
+			}
+			
+			g.setColor(Color.black);
+			
+			// draw kernels
+			for (Point2D p : getVoronoiModel().getKernels()) {
+				Point2D proj_p = screenMVP.transform(p);
+				int x = (int) proj_p.x; 
+				int y = (int) proj_p.y; 
+				int w = 8; 
+				int h = 8; 
+				g.fillOval(x - w/2, y - h/2, w, h);
+			}
+		}
+	}
+	
 	private class Handler extends MouseAdapter implements VoronoiModelListener {
 		
 		///
@@ -71,7 +114,7 @@ public class JVoronoi extends Viewer2D {
 		///
 		@Override
 		public void mousePressed(MouseEvent ev) {
-			if (ev.getButton() == MouseEvent.BUTTON3) {
+			if (ev.getButton() == MouseEvent.BUTTON1) {
 				double x = ev.getX() + 0.5;
 				double y = ev.getY() + 0.5;
 				Point2D p = mapToWorld(x, y);
@@ -84,17 +127,7 @@ public class JVoronoi extends Viewer2D {
 		///
 		@Override
 		public void kernelAdded(Point2D p) {
-			// update viewer2D
-			getModel().removeAll();
-			TopologyContainer t = getVoronoiModel().getDelaunayTopology();
-			for (int i = 0; i < t.getPolygonsCount(); i++) {
-				Point2D[] polygon = t.getPolygon(i);
-				Shape2D shape = new Shape2D(polygon);
-				shape.setColor(Color.black);
-				shape.setWireframe(true);
-				getModel().add(shape);
-				repaint();
-			}
+			repaint();
 		}
 		
 		@Override
