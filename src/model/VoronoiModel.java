@@ -1,7 +1,6 @@
 package model;
 
 import java.awt.Color;
-import java.awt.Point;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -10,48 +9,53 @@ import java.util.Set;
 import javax.swing.event.EventListenerList;
 
 import listener.VoronoiModelListener;
+import math2D.Point2D;
+import topology.Edge;
+import topology.TopologyContainer;
+import topology.Triangle;
 
 public class VoronoiModel {
 	
 	private EventListenerList listenerList;
-	private HashMap<Point, Color> kernels;
-	private Topology delaunayTopology;
-	private Topology voronoiTopology;
+	private HashMap<Point2D, Color> kernels;
+	private TopologyContainer delaunayTopology;
+	private TopologyContainer voronoiTopology;
 	
-	private DelaunayTriangulation dTriangulation;
+	private DelaunayAlgorithm algorithm;
 	
 	/** Constructeur */
 	public VoronoiModel() {
 		this.listenerList = new EventListenerList();
-		this.kernels = new HashMap<Point, Color>();
-		this.delaunayTopology = new Topology();
-		this.voronoiTopology = new Topology();
-		this.dTriangulation = new DelaunayTriangulation();
-		//addKernel(396, 297);
-		//addKernel(273, 105);
-		//addKernel(94,234);
+		this.kernels = new HashMap<Point2D, Color>();
+		this.delaunayTopology = new TopologyContainer();
+		this.voronoiTopology = new TopologyContainer();
+		this.algorithm = new DelaunayAlgorithm();
+		
+		//addKernel(353, 424);
+		//addKernel(86, 312);
+		//addKernel(163, 168);
 	}
 	
 	public int getKernelsCount() {
 		return kernels.size();
 	}
 	
-	public final Set<Point> getKernels() {
+	public final Set<Point2D> getKernels() {
 		return kernels.keySet();
 	}
 	
-	public final Color getColor(Point key) {
+	public final Color getColor(Point2D key) {
 		if (key == null) {
 			return Color.black;
 		}
 		return kernels.get(key);
 	}
 	
-	public final Topology getDelaunayTopology() {
+	public final TopologyContainer getDelaunayTopology() {
 		return delaunayTopology;
 	}
 	
-	public final Topology getVoronoiTopology() {
+	public final TopologyContainer getVoronoiTopology() {
 		return voronoiTopology;
 	}
 	
@@ -62,16 +66,16 @@ public class VoronoiModel {
 		fireKernelCleared();
 	}
 	
-	public void addKernel(int x, int y) {
+	public void addKernel(double x, double y) {
 		int r = (int) (Math.random() * 255.0);
 		int g = (int) (Math.random() * 255.0);
 		int b = (int) (Math.random() * 255.0);
-		Point key = new Point(x, y);
+		Point2D key = new Point2D(x, y);
 		Color value = new Color(r, g, b);
 		kernels.put(key, value);
 		
-		delaunayTriangulation();
-		//voronoiDiagram();
+		updateDelaunayTriangulation();
+		updateVoronoiDiagram();
 		
 		fireKernelAdded(key);
 	}
@@ -86,7 +90,7 @@ public class VoronoiModel {
 		listenerList.remove(VoronoiModelListener.class, l);
 	}
 	
-	private void fireKernelAdded(Point p) {
+	private void fireKernelAdded(Point2D p) {
 		Object[] listeners = listenerList.getListenerList();
 		for (int i = 0; i < listeners.length; i++) {
 			if (listeners[i] instanceof VoronoiModelListener) {
@@ -104,20 +108,32 @@ public class VoronoiModel {
 		}
 	}
 	
-	private void delaunayTriangulation() {
+	private void updateDelaunayTriangulation() {
 		delaunayTopology.clear();
 		
 		if (getKernelsCount() < 3) {
 			return;
 		}
 		
-		this.dTriangulation.performed();
+		this.algorithm.performed();
 	}
 	
-	private void voronoiDiagram() {
-		if (getKernelsCount() == 1) {
+	private void updateVoronoiDiagram() {
+		voronoiTopology.clear();
+		
+		if (getKernelsCount() == 0) {
 			return;
 		}
+		
+		if (getKernelsCount() == 1) {
+			Point2D c1 = new Point2D(0, 0);
+			Point2D c2 = new Point2D(640, 0);
+			Point2D c3 = new Point2D(640, 480);
+			Point2D c4 = new Point2D(0, 480);
+			voronoiTopology.addPolygon(c1, c2, c3, c4);
+			return;
+		}
+		
 		if (getKernelsCount() == 2) {
 			return;
 		}
@@ -134,27 +150,27 @@ public class VoronoiModel {
 	}
 	
 	/** Private class */
-	private class DelaunayTriangulation {
+	private class DelaunayAlgorithm {
 		
 		public ArrayList<Triangle> triangles;
 		public HashSet<Triangle> badTriangles;
 		public HashSet<Edge> polygon;
-		public Point p1, p2, p3;
+		public Point2D p1, p2, p3;
 		
 		/** Constructeur */
-		public DelaunayTriangulation() {
+		public DelaunayAlgorithm() {
 			this.triangles = new ArrayList<Triangle>();
 			this.badTriangles = new HashSet<Triangle>();
 			this.polygon = new HashSet<Edge>();
-			this.p1 = new Point();
-			this.p2 = new Point();
-			this.p3 = new Point();
+			this.p1 = new Point2D();
+			this.p2 = new Point2D();
+			this.p3 = new Point2D();
 		}
 		
 		public void performed() {
 			init();
 			
-			for (Point p : kernels.keySet()) {
+			for (Point2D p : kernels.keySet()) {
 				run(p);
 			}
 			
@@ -164,22 +180,22 @@ public class VoronoiModel {
 		public void init() {
 			
 			// calcule un triangle englobant
-			Point min = new Point(Integer.MAX_VALUE, Integer.MAX_VALUE);
-			Point max = new Point(Integer.MIN_VALUE, Integer.MIN_VALUE);
+			Point2D min = new Point2D(Integer.MAX_VALUE, Integer.MAX_VALUE);
+			Point2D max = new Point2D(Integer.MIN_VALUE, Integer.MIN_VALUE);
 			
-			for (Point p : kernels.keySet()) {
+			for (Point2D p : kernels.keySet()) {
 				min.x = (p.x < min.x ? p.x : min.x);
 				min.y = (p.y < min.y ? p.y : min.y);
 				max.x = (p.x > max.x ? p.x : max.x);
 				max.y = (p.y > max.y ? p.y : max.y);
 			}
 			
-			int dx = max.x - min.x;
-			int dy = max.y - min.y;
+			double dx = max.x - min.x;
+			double dy = max.y - min.y;
 			
-			p1.setLocation(min.x - dx, min.y - dy);
-			p2.setLocation(min.x - dx + 4 * dx, min.y - dy);
-			p3.setLocation(min.x - dx, min.y - dy + 4 * dy);
+			p1.set(min.x - dx, min.y - dy);
+			p2.set(min.x - dx + 4 * dx, min.y - dy);
+			p3.set(min.x - dx, min.y - dy + 4 * dy);
 			
 			// triangluation de Delaunay initiale
 			triangles.clear();
@@ -189,7 +205,7 @@ public class VoronoiModel {
 			polygon.clear();
 		}
 		
-		public void run(Point p) {
+		public void run(Point2D p) {
 			
 			badTriangles.clear();
 			polygon.clear();
@@ -220,12 +236,12 @@ public class VoronoiModel {
 		
 		public void prune() {
 			
-			// supprime tous les triangles qui ont un sommet en communt avec le triangle initial
+			// supprime tous les triangles qui ont un sommet en commun avec le triangle initial
 			for (int i = triangles.size()-1; i >= 0; i--) {
 				Triangle triangle = triangles.get(i);
 				boolean isRemoved = false;
 				
-				for (Point p : triangle.getVertex()) {
+				for (Point2D p : triangle.getVertex()) {
 					isRemoved |= (p.equals(p1) || p.equals(p2) || p.equals(p3));
 				}
 				

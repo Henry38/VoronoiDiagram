@@ -1,13 +1,13 @@
-package model;
+package topology;
 
-import java.awt.Point;
+import math2D.Point2D;
 
 public class Edge {
 	
-	public Point a, b;
+	public Point2D a, b;
 	
 	/** Constructeur */
-	public Edge(Point a, Point b) {
+	public Edge(Point2D a, Point2D b) {
 		this.a = a;
 		this.b = b;
 	}
