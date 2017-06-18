@@ -38,14 +38,7 @@ public class Triangle {
 		return true;
 	}
 	
-	public boolean inCircum(Point2D p) {
-		double area = Math.abs( ((b.x-a.x)*(c.y-a.y) - (b.y-a.y)*(c.x-a.x)) / 2.0 );
-		
-		double d_ab = a.distance(b);
-		double d_bc = b.distance(c);
-		double d_ca = c.distance(a);
-		double R = (d_ab * d_bc * d_ca) / (4 * area);
-		
+	public Point2D getCircumCenter() {
 		Point2D half_ab = new Point2D((a.x+b.x)/2.0, (a.y+b.y)/2.0);
 		Point2D half_bc = new Point2D((b.x+c.x)/2.0, (b.y+c.y)/2.0);
 		//Point2D half_ca = new Point2D.Double((c.x+a.x)/2.0, (c.y+a.y)/2.0);
@@ -61,7 +54,7 @@ public class Triangle {
 		
 		double det = (a1 * b2) - (b1 * a2);
 		if (det == 0) {
-			return false;
+			return null;
 		}
 		
 		double d1 = (a1 * half_ab.x) + (b1 * half_ab.y);
@@ -69,8 +62,24 @@ public class Triangle {
 		
 		double cx = (( b2 * d1) + (-b1 * d2)) / det;
 		double cy = ((-a2 * d1) + ( a1 * d2)) / det;
-		Point2D center = new Point2D(cx, cy);
 		
-		return (Point2D.distance(center, p) <= R);
+		return new Point2D(cx, cy);
+	}
+	
+	public boolean inCircum(Point2D p) {
+		Point2D circumCenter = getCircumCenter();
+		
+		if (circumCenter == null) {
+			return false;
+		}
+		
+		double area = Math.abs( ((b.x-a.x)*(c.y-a.y) - (b.y-a.y)*(c.x-a.x)) / 2.0 );
+		
+		double d_ab = a.distance(b);
+		double d_bc = b.distance(c);
+		double d_ca = c.distance(a);
+		double R = (d_ab * d_bc * d_ca) / (4 * area);
+		
+		return (Point2D.distance(circumCenter, p) <= R);
 	}
 }

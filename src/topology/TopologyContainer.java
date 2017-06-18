@@ -65,33 +65,4 @@ public class TopologyContainer {
 	public void addTriangle(Triangle triangle) {
 		addTriangle(triangle.a, triangle.b, triangle.c);
 	}
-	
-//	protected class NShape {
-//		protected int[] pid;
-//		
-//		public int[] getID() {
-//			return pid;
-//		}
-//	}
-//	
-//	protected class Triangle extends NShape {
-//		
-//		public Triangle(int a, int b, int c) {
-//			this.pid = new int[] {a, b, c};
-//		}
-//	}
-//	
-//	protected class Quad extends NShape {
-//		
-//		public Quad(int a, int b, int c, int d) {
-//			this.pid = new int[] {a, b, c, d};
-//		}
-//	}
-//	
-//	protected class Polygon extends NShape {
-//		
-//		public Polygon(int... pid) {
-//			this.pid = pid;
-//		}
-//	}
 }
