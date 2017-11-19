@@ -151,11 +151,7 @@ public class VoronoiModel {
 		}
 		
 		if (getKernelsCount() == 1) {
-			Point2D c1 = new Point2D(0, 0);
-			Point2D c2 = new Point2D(640, 0);
-			Point2D c3 = new Point2D(640, 480);
-			Point2D c4 = new Point2D(0, 480);
-			voronoiTopology.addPolygon(c1, c2, c3, c4);
+			voronoiTopology.addPolygon(this.bounds);
 			return;
 		}
 		
