@@ -1,6 +1,7 @@
 package topology;
 
 import math2D.Point2D;
+import math2D.Vecteur2D;
 
 public class Triangle {
 	
@@ -13,12 +14,49 @@ public class Triangle {
 		this.c = c;
 	}
 	
+	public boolean has(Point2D p) {
+		return (a == p || b == p || c == p);
+	}
+	
+	public void orient() {
+		Vecteur2D ab = new Vecteur2D(a, b);
+		Vecteur2D ac = new Vecteur2D(a, c);
+		if (Vecteur2D.cross_product(ab, ac) < 0) {
+			Point2D tmp = b;
+			b = c;
+			c = tmp;
+		}
+	}
+	
+	public Point2D getA() {
+		return a;
+	}
+	
+	public Point2D getB() {
+		return b;
+	}
+	
+	public Point2D getC() {
+		return c;
+	}
+	
 	public Point2D[] getVertex() {
-		return new Point2D[] {a, b, c};
+		return new Point2D[] {getA(), getB(), getC()};
 	}
 	
 	public Edge[] getEdges() {
 		return new Edge[] {new Edge(a, b), new Edge(b, c), new Edge(c, a)};
+	}
+	
+	public boolean shareEdgeWith(Triangle t) {
+		for (Edge e1 : getEdges()) {
+			for (Edge e2 : t.getEdges()) {
+				if (e1.equals(e2)) {
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 	
 	@Override
