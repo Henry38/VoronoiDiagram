@@ -1,15 +1,21 @@
 package model;
 
 import java.awt.Color;
+import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map.Entry;
 import java.util.Set;
+import java.util.TreeMap;
 
 import javax.swing.event.EventListenerList;
 
 import listener.VoronoiModelListener;
 import math2D.Point2D;
+import math2D.Transformation2D;
 import math2D.Vecteur2D;
 import topology.Edge;
 import topology.TopologyContainer;
@@ -286,6 +292,150 @@ public class VoronoiModel {
 			for (Triangle triangle : triangles) {
 				delaunayTopology.addTriangle(triangle);
 			}
+		}
+	}
+	
+	/** Private class */
+	private class VoronoiAlgorithm {
+		
+		private TopologyContainer topology;
+		private int triangleCount;
+		
+		/** Constructeur */
+		public VoronoiAlgorithm() {
+			
+		}
+		
+		public void performed() {
+			init();
+			
+			// performed a Voronoi diagram
+			for (Point2D kernel : getKernels()) {
+				run(kernel);
+			}
+		}
+		
+		private void init() {
+			topology = getDelaunayTopology();
+			triangleCount = topology.getPolygonsCount();
+		}
+		
+		private void run(Point2D kernel) {
+			// parcourir la triangulation de Delaunay et etablir
+			// la liste des triangles adjacent a kernel
+			ArrayList<Triangle> listTriangles = new ArrayList<Triangle>();
+			for (int key = 0; key < triangleCount; key++) {
+				Point2D[] polygon = topology.getPolygon(key);
+				for (int i = 0; i < 3; i++) {
+					if (polygon[i] == kernel) {
+						Point2D a = polygon[i];
+						Point2D b = polygon[(i+1) % 3];
+						Point2D c = polygon[(i+2) % 3];
+						Triangle triangle = new Triangle(a, b, c);
+						triangle.orient();
+						listTriangles.add(triangle);
+					}
+				}
+			}
+			
+			int npoints = listTriangles.size();
+			
+			// comparateur qui tri les points dans le sens trigonometrique avec kernel comme centre de rotation
+			Comparator<Point2D> counterClockwiseComparator = new Comparator<Point2D>() {
+				@Override
+				public int compare(Point2D p1, Point2D p2) {
+					double radian1 = Math.atan2(p1.getY() - kernel.getY(), p1.getX() - kernel.getX());
+					double radian2 = Math.atan2(p2.getY() - kernel.getY(), p2.getX() - kernel.getX());
+					radian1 += (radian1 < 0 ? 2*Math.PI : 0);
+					radian2 += (radian2 < 0 ? 2*Math.PI : 0);
+					if (Math.abs(radian1) != Math.abs(radian2)) {
+						return (radian1 > radian2 ? 1 : -1);
+					} else {
+						return 0;
+					}
+				}
+			};
+			
+			// liste dans le sens trigonometrique les triangles adjacent a kernel
+			TreeMap<Point2D, Triangle> treeMap = new TreeMap<Point2D, Triangle>(counterClockwiseComparator); 
+			for (int i = 0; i < npoints; i++) {
+				Triangle triangle = listTriangles.get(i);
+				Point2D circumCenter = triangle.getCircumCenter();
+				treeMap.put(circumCenter, triangle);
+			}
+			
+			ArrayList<Point2D> circumCenterToAdd = new ArrayList<Point2D>();
+			
+			// calcule la liste des points qui complete une cellule non bornee 
+			for(Entry<Point2D, Triangle> entry : treeMap.entrySet()) {
+				Entry<Point2D, Triangle> nextEntry = treeMap.higherEntry(entry.getKey());
+				if (nextEntry == null) {
+					nextEntry = treeMap.firstEntry();
+				}
+				Triangle t1 = entry.getValue();
+				Triangle t2 = nextEntry.getValue();
+				if (t1.getC() != t2.getB()) {
+					Point2D p1 = bBoxIntersection(kernel, entry, false);
+					Point2D p2 = bBoxIntersection(kernel, nextEntry, true);
+					
+					ArrayList<Point2D> boundary = new ArrayList<Point2D>();
+					
+					boundary.add(p1);
+					boundary.add(p2);
+					boundary.add(bounds[0]);
+					boundary.add(bounds[1]);
+					boundary.add(bounds[2]);
+					boundary.add(bounds[3]);
+					
+					Collections.sort(boundary, counterClockwiseComparator);
+					
+					int offset = boundary.indexOf(p1);
+					for (int i = 0; i < boundary.size(); i++) {
+						int index = (i + offset) % boundary.size();
+						Point2D p = boundary.get(index);
+						circumCenterToAdd.add(p);
+						if (p == p2) {
+							i = boundary.size();
+						}
+					}
+				}
+			}
+			
+			// ajoute les points pour borner la cellule
+			npoints += circumCenterToAdd.size();
+			for (Point2D p : circumCenterToAdd) {
+				treeMap.put(p, null);
+			}
+			
+			// ajoute le polygone representant la cellule a la topology de voronoi
+			Point2D[] circumCenterArray = new Point2D[npoints];
+			treeMap.keySet().toArray(circumCenterArray);
+			voronoiTopology.addPolygon(circumCenterArray);
+		}
+		
+		private Point2D bBoxIntersection(Point2D kernel, Entry<Point2D, Triangle> entry, boolean reverse) {
+			Triangle triangle = entry.getValue();
+			Point2D circumCenter = entry.getKey();
+			
+			triangle.orient();
+			
+			int offset = (reverse ? 1 : 2);
+			int rx = (reverse ? 1 : -1);
+			int ry = (reverse ? -1 : 1);
+			
+			Point2D[] points = triangle.getVertex();
+			for (int i = 0; i < 3; i++) {
+				if (points[i] == kernel) {
+					Vecteur2D vect = new Vecteur2D(kernel, points[(i+offset) % 3]);
+					vect.normalize();
+					// rotation the normale by +/-90 degrees 
+					double dx = rx * Math.round(vect.getDy() * 1000) / 1000.0;
+					double dy = ry * Math.round(vect.getDx() * 1000) / 1000.0;
+					return rayIntersectionWithBBox(circumCenter, new Vecteur2D(dx, dy));
+				}
+			}
+			
+			return null;
 		}
 	}
 }
