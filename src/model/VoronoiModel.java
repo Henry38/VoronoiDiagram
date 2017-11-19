@@ -161,6 +161,62 @@ public class VoronoiModel {
 		}
 		
 		if (getKernelsCount() == 2) {
+			Point2D[] kernelArray = new Point2D[2];
+			getKernels().toArray(kernelArray);
+			
+			Point2D a = kernelArray[0];
+			Point2D b = kernelArray[1];
+			Point2D half_ab = new Point2D((a.x+b.x)/2.0, (a.y+b.y)/2.0);
+			double dx = b.getX() - a.getX();
+			double dy = b.getY() - a.getY();
+			Point2D p1 = rayIntersectionWithBBox(half_ab, new Vecteur2D(-dy, dx));
+			Point2D p2 = rayIntersectionWithBBox(half_ab, new Vecteur2D(dy, -dx));
+			
+			ArrayList<Point2D> boundary = new ArrayList<Point2D>();
+			
+			boundary.add(p1);
+			boundary.add(p2);
+			boundary.add(bounds[0]);
+			boundary.add(bounds[1]);
+			boundary.add(bounds[2]);
+			boundary.add(bounds[3]);
+			
+			// comparateur qui tri les points dans le sens trigonometrique avec l'origine comme centre de rotation
+			Comparator<Point2D> counterClockwiseComparator = new Comparator<Point2D>() {
+				@Override
+				public int compare(Point2D p1, Point2D p2) {
+					double radian1 = Math.atan2(p1.getY(), p1.getX());
+					double radian2 = Math.atan2(p2.getY(), p2.getX());
+					radian1 += (radian1 < 0 ? 2*Math.PI : 0);
+					radian2 += (radian2 < 0 ? 2*Math.PI : 0);
+					if (Math.abs(radian1) != Math.abs(radian2)) {
+						return (radian1 > radian2 ? 1 : -1);
+					} else {
+						return 0;
+					}
+				}
+			};
+			
+			Collections.sort(boundary, counterClockwiseComparator);
+			
+			for (Point2D p : new Point2D[] {p1, p2}) {
+				int offset = boundary.indexOf(p);
+				ArrayList<Point2D> cellule = new ArrayList<Point2D>(4);
+				for (int i = 0; i < boundary.size(); i++) {
+					int index = (i + offset) % boundary.size();
+					Point2D boundary_p = boundary.get(index);
+					cellule.add(boundary_p);
+					if ((boundary_p == p2 || boundary_p == p1) && boundary_p != p) {
+						i = boundary.size();
+					}
+				}
+				
+				int npoints = cellule.size();
+				Point2D[] celluleArray = new Point2D[npoints];
+				cellule.toArray(celluleArray);
+				voronoiTopology.addPolygon(celluleArray);
+			}
+			
 			return;
 		}
 		
