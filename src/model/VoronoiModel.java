@@ -92,7 +92,7 @@ public class VoronoiModel {
 		int g = (int) (Math.random() * 255.0);
 		int b = (int) (Math.random() * 255.0);
 		Point2D key = new Point2D(x, y);
-		Color value = new Color(r, g, b);
+		Color value = new Color(r, g, b, 204);
 		kernels.put(key, value);
 		
 		updateDelaunayTriangulation();
