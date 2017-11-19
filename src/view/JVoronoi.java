@@ -31,8 +31,8 @@ public class JVoronoi extends Viewer2D {
 		getCamera().setSpinnable(false);
 		getCamera().setZoomable(false);
 		
-		this.drawAxis = true;
-		this.drawGrid = false;
+		this.drawAxis = false;
+		this.drawGrid = true;
 		
 		addMouseListener(handler);
 	}
@@ -73,6 +73,37 @@ public class JVoronoi extends Viewer2D {
 		VoronoiModel voronoiModel = getVoronoiModel();
 				
 		if (voronoiModel != null) {
+			int kernelCount = voronoiModel.getKernelsCount();
+			Point2D[] kernels = new Point2D[kernelCount];
+			
+			int n = 0;
+			for (Point2D p : voronoiModel.getKernels()) {
+				kernels[n] = p;
+				n++;
+			}
+			
+			TopologyContainer voronoiTopology = voronoiModel.getVoronoiTopology();
+			int polygonCount = voronoiTopology.getPolygonsCount();
+			
+			// draw Voronoi diagram
+			for (int key = 0; key < polygonCount; key++) {
+				Point2D kernel = kernels[key];
+				Point2D[] polygon = voronoiTopology.getPolygon(key);
+				
+				int npoints = polygon.length;
+				int[] xpoints = new int[npoints];
+				int[] ypoints = new int[npoints];
+				
+				for (int i = 0; i < npoints; i++) {
+					Point2D proj_p = screenMVP.transform(polygon[i]);
+					xpoints[i] = (int) proj_p.x;
+					ypoints[i] = (int) proj_p.y;
+				}
+				
+				Color color = voronoiModel.getColor(kernel);
+				g2.setColor(color);
+				g2.fillPolygon(xpoints, ypoints, npoints);
+			}
 			
 			TopologyContainer topology = voronoiModel.getDelaunayTopology();
 			int triangleCount = topology.getPolygonsCount();
