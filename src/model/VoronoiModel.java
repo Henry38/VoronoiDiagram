@@ -44,22 +44,22 @@ public class VoronoiModel {
 		return kernels.size();
 	}
 	
-	public final Set<Point2D> getKernels() {
+	public Set<Point2D> getKernels() {
 		return kernels.keySet();
 	}
 	
-	public final Color getColor(Point2D key) {
+	public Color getColor(Point2D key) {
 		if (key == null) {
 			return Color.black;
 		}
 		return kernels.get(key);
 	}
 	
-	public final TopologyContainer getDelaunayTopology() {
+	public TopologyContainer getDelaunayTopology() {
 		return delaunayTopology;
 	}
 	
-	public final TopologyContainer getVoronoiTopology() {
+	public TopologyContainer getVoronoiTopology() {
 		return voronoiTopology;
 	}
 	
