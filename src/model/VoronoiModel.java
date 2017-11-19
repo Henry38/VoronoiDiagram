@@ -10,6 +10,7 @@ import javax.swing.event.EventListenerList;
 
 import listener.VoronoiModelListener;
 import math2D.Point2D;
+import math2D.Vecteur2D;
 import topology.Edge;
 import topology.TopologyContainer;
 import topology.Triangle;
@@ -168,6 +169,29 @@ public class VoronoiModel {
 //				}
 //			}
 //		}
+	private Point2D rayIntersectionWithBBox(Point2D origin, Vecteur2D direction) {
+		double xmin = bounds[0].getX();
+		double ymin = bounds[0].getY();
+		double xmax = bounds[2].getX();
+		double ymax = bounds[2].getY();
+		
+		double x = origin.getX();
+		double y = origin.getY();
+		
+		double dx = direction.getDx();
+		double dy = direction.getDy();
+		
+		double t0x = (dx != 0 ? (xmin - x) / dx : 0);
+		double t1x = (dx != 0 ? (xmax - x) / dx : 0);
+		double t0y = (dy != 0 ? (ymin - y) / dy : 0);
+		double t1y = (dy != 0 ? (ymax - y) / dy : 0);
+		
+		double tmin = Double.MAX_VALUE;
+		for (double t : new double[] {t0x, t0y, t1x, t1y}) {
+			tmin = (t > 0 && t < tmin ? t : tmin);
+		}
+		
+		return new Point2D(x + tmin * dx, y + tmin * dy);
 	}
 	
 	/** Private class */
