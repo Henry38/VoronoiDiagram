@@ -101,6 +101,10 @@ public class VoronoiModel {
 		fireKernelAdded(key);
 	}
 	
+	public void addKernel(Point2D p) {
+		addKernel(p.getX(), p.getY());
+	}
+	
 	/** Ajoute un listener sur le modele */
 	public void addVoronoiListener(VoronoiModelListener l) {
 		listenerList.add(VoronoiModelListener.class, l);
