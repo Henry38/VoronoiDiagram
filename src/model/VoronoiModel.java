@@ -13,10 +13,13 @@ import math2D.Point2D;
 import topology.Edge;
 import topology.TopologyContainer;
 import topology.Triangle;
+import viewer2D.data.Camera;
 
 public class VoronoiModel {
 	
 	private EventListenerList listenerList;
+	
+	private Point2D[] bounds;
 	private HashMap<Point2D, Color> kernels;
 	private TopologyContainer delaunayTopology;
 	private TopologyContainer voronoiTopology;
@@ -26,6 +29,7 @@ public class VoronoiModel {
 	/** Constructeur */
 	public VoronoiModel() {
 		this.listenerList = new EventListenerList();
+		this.bounds = new Point2D[4];
 		this.kernels = new HashMap<Point2D, Color>();
 		this.delaunayTopology = new TopologyContainer();
 		this.voronoiTopology = new TopologyContainer();
@@ -57,6 +61,23 @@ public class VoronoiModel {
 	
 	public final TopologyContainer getVoronoiTopology() {
 		return voronoiTopology;
+	}
+	
+	public void setBounds(Camera camera) {
+		Rectangle2D.Double rect = camera.getRectangle();
+		
+		double left = rect.getMinX();
+		double bottom = rect.getMinY();
+		double right = rect.getMaxX();
+		double top = rect.getMaxY();
+		
+		Transformation2D inverseView = camera.viewMat().getInverseTransformation();
+		
+		// Calcul des quatres points du rectangle (repere monde)
+		this.bounds[0] = inverseView.transform(new Point2D(left, bottom));
+		this.bounds[1] = inverseView.transform(new Point2D(right, bottom));
+		this.bounds[2] = inverseView.transform(new Point2D(right, top));
+		this.bounds[3] = inverseView.transform(new Point2D(left, top));
 	}
 	
 	public void clearAll() {

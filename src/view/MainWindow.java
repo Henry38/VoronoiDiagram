@@ -18,6 +18,8 @@ public class MainWindow extends JFrame {
 		VoronoiModel model = new VoronoiModel();
 		JVoronoi jvoronoi = new JVoronoi(model);
 		
+		model.setBounds(jvoronoi.getCamera());
+		
 		JPanel panel = new JPanel();
 		panel.setLayout(new BorderLayout());
 		panel.add(jvoronoi);
