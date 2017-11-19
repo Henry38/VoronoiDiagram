@@ -35,10 +35,6 @@ public class VoronoiModel {
 		this.delaunayTopology = new TopologyContainer();
 		this.voronoiTopology = new TopologyContainer();
 		this.algorithm = new DelaunayAlgorithm();
-		
-		//addKernel(353, 424);
-		//addKernel(86, 312);
-		//addKernel(163, 168);
 	}
 	
 	public int getKernelsCount() {
@@ -160,15 +156,6 @@ public class VoronoiModel {
 			return;
 		}
 		
-//		for (Point p : getKernels())  {
-//			ArrayList<Triangle> a = new ArrayList<Triangle>();
-//			int polygonCount = delaunayTopology.getPolygonsCount();
-//			for (int i = 0; i < polygonCount; i++) {
-//				if (triangle.contains(p)) {
-//					
-//				}
-//			}
-//		}
 	private Point2D rayIntersectionWithBBox(Point2D origin, Vecteur2D direction) {
 		double xmin = bounds[0].getX();
 		double ymin = bounds[0].getY();
@@ -222,13 +209,13 @@ public class VoronoiModel {
 			prune();
 		}
 		
-		public void init() {
+		private void init() {
 			
 			// calcule un triangle englobant
 			Point2D min = new Point2D(Integer.MAX_VALUE, Integer.MAX_VALUE);
 			Point2D max = new Point2D(Integer.MIN_VALUE, Integer.MIN_VALUE);
 			
-			for (Point2D p : kernels.keySet()) {
+			for (Point2D p : getKernels()) {
 				min.x = (p.x < min.x ? p.x : min.x);
 				min.y = (p.y < min.y ? p.y : min.y);
 				max.x = (p.x > max.x ? p.x : max.x);
@@ -250,7 +237,7 @@ public class VoronoiModel {
 			polygon.clear();
 		}
 		
-		public void run(Point2D p) {
+		private void run(Point2D kernel) {
 			
 			badTriangles.clear();
 			polygon.clear();
@@ -258,7 +245,7 @@ public class VoronoiModel {
 			// suppime tous les triangles ne respectant la condition de Delaunay
 			for (int i = triangles.size()-1; i >= 0; i--) {
 				Triangle triangle = triangles.get(i);
-				if (triangle.inCircum(p)) {
+				if (triangle.inCircum(kernel)) {
 					badTriangles.add(triangle);
 					triangles.remove(i);
 				}
