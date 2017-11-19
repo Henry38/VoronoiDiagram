@@ -2,6 +2,7 @@ package view;
 
 import java.awt.Color;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
@@ -20,7 +21,7 @@ public class JVoronoi extends Viewer2D {
 	private Handler handler;
 	
 	public JVoronoi(VoronoiModel model, int width, int height) {
-		super(width, height);
+		super(null, width, height);
 		this.model = null;
 		this.handler = new Handler();
 		
@@ -68,15 +69,16 @@ public class JVoronoi extends Viewer2D {
 	public void paintComponent(Graphics g) {
 		super.paintComponent(g);
 		
+		Graphics2D g2 = (Graphics2D) g;
 		VoronoiModel voronoiModel = getVoronoiModel();
 				
 		if (voronoiModel != null) {
 			
 			TopologyContainer topology = voronoiModel.getDelaunayTopology();
-			int polygonCount = topology.getPolygonsCount();
+			int triangleCount = topology.getPolygonsCount();
 			
 			// draw Delaunay triangulation
-			for (int key = 0; key < polygonCount; key++) {
+			for (int key = 0; key < triangleCount; key++) {
 				Point2D[] polygon = topology.getPolygon(key);
 				
 				int npoints = polygon.length;
@@ -89,20 +91,15 @@ public class JVoronoi extends Viewer2D {
 					ypoints[i] = (int) proj_p.y;
 				}
 				
-				g.setColor(Color.black);
-				g.drawPolygon(xpoints, ypoints, npoints);
+				g2.setColor(Color.black);
+				g2.drawPolygon(xpoints, ypoints, npoints);
 			}
 			
-			g.setColor(Color.black);
+			g2.setColor(Color.black);
 			
 			// draw kernels
-			for (Point2D p : getVoronoiModel().getKernels()) {
-				Point2D proj_p = screenMVP.transform(p);
-				int x = (int) proj_p.x; 
-				int y = (int) proj_p.y; 
-				int w = 8; 
-				int h = 8; 
-				g.fillOval(x - w/2, y - h/2, w, h);
+			for (Point2D p : voronoiModel.getKernels()) {
+				drawPoint(g2, p);
 			}
 		}
 	}

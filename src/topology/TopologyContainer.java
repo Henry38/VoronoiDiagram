@@ -35,7 +35,6 @@ public class TopologyContainer {
 			polygon[i] = vertex.get(indices[i]);
 		}
 		return polygon;
-		//return polygons.get(i);
 	}
 	
 	public void clear() {
