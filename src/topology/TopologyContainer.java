@@ -63,6 +63,7 @@ public class TopologyContainer {
 	}
 	
 	public void addTriangle(Triangle triangle) {
-		addTriangle(triangle.a, triangle.b, triangle.c);
+		Point2D[] points = triangle.getVertex();
+		addTriangle(points[0], points[1], points[2]);
 	}
 }

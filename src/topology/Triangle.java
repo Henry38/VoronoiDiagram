@@ -4,7 +4,7 @@ import math2D.Point2D;
 
 public class Triangle {
 	
-	public Point2D a, b, c;
+	private Point2D a, b, c;
 	
 	/** Constucteur */
 	public Triangle(Point2D a, Point2D b, Point2D c) {
