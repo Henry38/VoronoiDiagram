@@ -31,7 +31,8 @@ public class VoronoiModel {
 	private TopologyContainer delaunayTopology;
 	private TopologyContainer voronoiTopology;
 	
-	private DelaunayAlgorithm algorithm;
+	private DelaunayAlgorithm delauneyAlgorithm;
+	private VoronoiAlgorithm voronoiAlgorithm;
 	
 	/** Constructeur */
 	public VoronoiModel() {
@@ -40,7 +41,8 @@ public class VoronoiModel {
 		this.kernels = new HashMap<Point2D, Color>();
 		this.delaunayTopology = new TopologyContainer();
 		this.voronoiTopology = new TopologyContainer();
-		this.algorithm = new DelaunayAlgorithm();
+		this.delauneyAlgorithm = new DelaunayAlgorithm();
+		this.voronoiAlgorithm = new VoronoiAlgorithm();
 	}
 	
 	public int getKernelsCount() {
@@ -143,7 +145,7 @@ public class VoronoiModel {
 			return;
 		}
 		
-		this.algorithm.performed();
+		this.delauneyAlgorithm.performed();
 	}
 	
 	private void updateVoronoiDiagram() {
@@ -162,6 +164,9 @@ public class VoronoiModel {
 			return;
 		}
 		
+		this.voronoiAlgorithm.performed();
+	}
+	
 	private Point2D rayIntersectionWithBBox(Point2D origin, Vecteur2D direction) {
 		double xmin = bounds[0].getX();
 		double ymin = bounds[0].getY();
@@ -208,8 +213,8 @@ public class VoronoiModel {
 		public void performed() {
 			init();
 			
-			for (Point2D p : kernels.keySet()) {
-				run(p);
+			for (Point2D kernel : kernels.keySet()) {
+				run(kernel);
 			}
 			
 			prune();
@@ -268,11 +273,11 @@ public class VoronoiModel {
 			
 			// cree de nouveaux triangles en utilisant le sommet courant et le polygone englobant
 			for (Edge edge: polygon) {
-				triangles.add(new Triangle(edge.a, edge.b, p));
+				triangles.add(new Triangle(edge.a, edge.b, kernel));
 			}
 		}
 		
-		public void prune() {
+		private void prune() {
 			
 			// supprime tous les triangles qui ont un sommet en commun avec le triangle initial
 			for (int i = triangles.size()-1; i >= 0; i--) {
