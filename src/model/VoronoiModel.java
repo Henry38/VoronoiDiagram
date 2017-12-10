@@ -98,13 +98,6 @@ public class VoronoiModel extends WorldModel {
 		this.bounds[3] = inverseView.transform(new Point2D(left, top));
 	}
 	
-	public void clearAll() {
-		this.kernels.clear();
-		this.delaunayTopology.clear();
-		this.voronoiTopology.clear();
-		fireKernelCleared();
-	}
-	
 	public void addKernel(double x, double y) {
 		int r = (int) (Math.random() * 255.0);
 		int g = (int) (Math.random() * 255.0);
