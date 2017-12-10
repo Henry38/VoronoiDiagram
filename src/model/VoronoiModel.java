@@ -11,9 +11,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
 
-import javax.swing.event.EventListenerList;
 
-import listener.VoronoiModelListener;
 import math2D.Point2D;
 import math2D.Transformation2D;
 import math2D.Vecteur2D;
@@ -24,7 +22,6 @@ import viewer2D.data.Camera;
 
 public class VoronoiModel {
 	
-	private EventListenerList listenerList;
 	
 	private Point2D[] bounds;
 	private HashMap<Point2D, Color> kernels;
@@ -36,7 +33,6 @@ public class VoronoiModel {
 	
 	/** Constructeur */
 	public VoronoiModel() {
-		this.listenerList = new EventListenerList();
 		this.bounds = new Point2D[4];
 		this.kernels = new HashMap<Point2D, Color>();
 		this.delaunayTopology = new TopologyContainer();
@@ -103,39 +99,10 @@ public class VoronoiModel {
 		updateDelaunayTriangulation();
 		updateVoronoiDiagram();
 		
-		fireKernelAdded(key);
 	}
 	
 	public void addKernel(Point2D p) {
 		addKernel(p.getX(), p.getY());
-	}
-	
-	/** Ajoute un listener sur le modele */
-	public void addVoronoiListener(VoronoiModelListener l) {
-		listenerList.add(VoronoiModelListener.class, l);
-	}
-	
-	/** Retire un listener sur le modele */
-	public void removeVoronoiListener(VoronoiModelListener l) {
-		listenerList.remove(VoronoiModelListener.class, l);
-	}
-	
-	private void fireKernelAdded(Point2D p) {
-		Object[] listeners = listenerList.getListenerList();
-		for (int i = 0; i < listeners.length; i++) {
-			if (listeners[i] instanceof VoronoiModelListener) {
-				((VoronoiModelListener) listeners[i]).kernelAdded(p);
-			}
-		}
-	}
-	
-	private void fireKernelCleared() {
-		Object[] listeners = listenerList.getListenerList();
-		for (int i = 0; i < listeners.length; i++) {
-			if (listeners[i] instanceof VoronoiModelListener) {
-				((VoronoiModelListener) listeners[i]).kernelCleared();
-			}
-		}
 	}
 	
 	private void updateDelaunayTriangulation() {
