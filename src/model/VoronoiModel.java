@@ -40,15 +40,15 @@ public class VoronoiModel extends WorldModel {
 	private MeshTopology<Kernel> delaunayTopology;
 	private MeshTopology<Point2D> voronoiTopology;
 	
-	private DelaunayAlgorithm delauneyAlgorithm;
+	private DelaunayAlgorithm delaunayAlgorithm;
 	private VoronoiAlgorithm voronoiAlgorithm;
 	
 	/** Constructeur */
 	public VoronoiModel() {
 		this.bounds = new Point2D[4];
-		this.delauneyAlgorithm = new DelaunayAlgorithm();
 		this.delaunayTopology = new MeshTopology<Kernel>();
 		this.voronoiTopology = new MeshTopology<Point2D>();
+		this.delaunayAlgorithm = new DelaunayAlgorithm();
 		this.voronoiAlgorithm = new VoronoiAlgorithm();
 	}
 	
@@ -124,7 +124,7 @@ public class VoronoiModel extends WorldModel {
 			return;
 		}
 		
-		this.delauneyAlgorithm.performed();
+		this.delaunayAlgorithm.performed();
 	}
 	
 	private void updateVoronoiDiagram() {
