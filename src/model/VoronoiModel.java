@@ -9,6 +9,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map.Entry;
 
+import data.Camera;
 import data.WorldModel;
 import geometry.Topology2D;
 
@@ -20,7 +21,6 @@ import math2D.Vecteur2D;
 import topology.Edge;
 import topology.MeshTopology;
 import topology.Triangle;
-import viewer2D.data.Camera;
 import view.Voronoi2D;
 
 public class VoronoiModel extends WorldModel {
