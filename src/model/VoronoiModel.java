@@ -66,12 +66,12 @@ public class VoronoiModel extends WorldModel {
 		return delaunayTopology.getPositions();
 	}
 	
-	public Color getColor(Point2D key) {
-		if (key == null) {
-			return Color.black;
-		}
-		return kernels.get(key);
-	}
+//	public Color getColor(Point2D key) {
+//		if (key == null) {
+//			return Color.black;
+//		}
+//		return kernels.get(key);
+//	}
 	
 	public MeshTopology<Kernel> getDelaunayTopology() {
 		return delaunayTopology;
@@ -402,7 +402,7 @@ public class VoronoiModel extends WorldModel {
 			
 			ArrayList<Point2D> circumCenterToAdd = new ArrayList<Point2D>();
 			
-			// calcule la liste des points qui complete une cellule non bornee 
+			// calcule la liste des points qui complete une cellule non bornee
 			for(Entry<Point2D, Triangle> entry : treeMap.entrySet()) {
 				Entry<Point2D, Triangle> nextEntry = treeMap.higherEntry(entry.getKey());
 				if (nextEntry == null) {
