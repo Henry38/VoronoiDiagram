@@ -5,29 +5,40 @@ import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map.Entry;
-import java.util.Set;
-import java.util.TreeMap;
 
 import data.WorldModel;
+import java.util.TreeMap;
 
 import math2D.Point2D;
 import math2D.Transformation2D;
 import math2D.Vecteur2D;
 import topology.Edge;
-import topology.TopologyContainer;
+import topology.MeshTopology;
 import topology.Triangle;
 import viewer2D.data.Camera;
 
 public class VoronoiModel extends WorldModel {
 	
+	private class Kernel extends Point2D {
+		
+		public Color color;
+		
+		public Kernel(double x, double y, Color color) {
+			super(x, y);
+			this.color = color;
+		}
+		
+		public Kernel(Point2D p, Color color) {
+			this(p.getX(), p.getY(), color);
+		}
+	}
 	
 	private Point2D[] bounds;
-	private HashMap<Point2D, Color> kernels;
-	private TopologyContainer delaunayTopology;
-	private TopologyContainer voronoiTopology;
+	private MeshTopology<Kernel> delaunayTopology;
+	private MeshTopology<Point2D> voronoiTopology;
 	
 	private DelaunayAlgorithm delauneyAlgorithm;
 	private VoronoiAlgorithm voronoiAlgorithm;
@@ -35,19 +46,18 @@ public class VoronoiModel extends WorldModel {
 	/** Constructeur */
 	public VoronoiModel() {
 		this.bounds = new Point2D[4];
-		this.kernels = new HashMap<Point2D, Color>();
-		this.delaunayTopology = new TopologyContainer();
-		this.voronoiTopology = new TopologyContainer();
 		this.delauneyAlgorithm = new DelaunayAlgorithm();
+		this.delaunayTopology = new MeshTopology<Kernel>();
+		this.voronoiTopology = new MeshTopology<Point2D>();
 		this.voronoiAlgorithm = new VoronoiAlgorithm();
 	}
 	
 	public int getKernelsCount() {
-		return kernels.size();
+		return delaunayTopology.getNbPositions();
 	}
 	
-	public Set<Point2D> getKernels() {
-		return kernels.keySet();
+	public List<Kernel> getKernels() {
+		return delaunayTopology.getPositions();
 	}
 	
 	public Color getColor(Point2D key) {
@@ -57,11 +67,11 @@ public class VoronoiModel extends WorldModel {
 		return kernels.get(key);
 	}
 	
-	public TopologyContainer getDelaunayTopology() {
+	public MeshTopology<Kernel> getDelaunayTopology() {
 		return delaunayTopology;
 	}
 	
-	public TopologyContainer getVoronoiTopology() {
+	public MeshTopology<Point2D> getVoronoiTopology() {
 		return voronoiTopology;
 	}
 	
@@ -93,9 +103,9 @@ public class VoronoiModel extends WorldModel {
 		int r = (int) (Math.random() * 255.0);
 		int g = (int) (Math.random() * 255.0);
 		int b = (int) (Math.random() * 255.0);
-		Point2D key = new Point2D(x, y);
-		Color value = new Color(r, g, b, 204);
-		kernels.put(key, value);
+		Point2D point = new Point2D(x, y);
+		Color color = new Color(r, g, b, 204);
+		delaunayTopology.addPosition(new Kernel(point, color));
 		
 		updateDelaunayTriangulation();
 		updateVoronoiDiagram();
@@ -108,7 +118,7 @@ public class VoronoiModel extends WorldModel {
 	}
 	
 	private void updateDelaunayTriangulation() {
-		delaunayTopology.clear();
+		delaunayTopology.clearTopology();
 		
 		if (getKernelsCount() < 3) {
 			return;
@@ -119,36 +129,29 @@ public class VoronoiModel extends WorldModel {
 	
 	private void updateVoronoiDiagram() {
 		voronoiTopology.clear();
+		voronoiTopology.addPositions(this.bounds);
 		
 		if (getKernelsCount() == 0) {
 			return;
 		}
 		
 		if (getKernelsCount() == 1) {
-			voronoiTopology.addPolygon(this.bounds);
+			voronoiTopology.addFace(0, 1, 2, 3);
 			return;
 		}
 		
 		if (getKernelsCount() == 2) {
-			Point2D[] kernelArray = new Point2D[2];
-			getKernels().toArray(kernelArray);
-			
-			Point2D a = kernelArray[0];
-			Point2D b = kernelArray[1];
+			Point2D a = delaunayTopology.getPosition(0);
+			Point2D b = delaunayTopology.getPosition(1);
 			Point2D half_ab = new Point2D((a.x+b.x)/2.0, (a.y+b.y)/2.0);
 			double dx = b.getX() - a.getX();
 			double dy = b.getY() - a.getY();
 			Point2D p1 = rayIntersectionWithBBox(half_ab, new Vecteur2D(-dy, dx));
 			Point2D p2 = rayIntersectionWithBBox(half_ab, new Vecteur2D(dy, -dx));
 			
-			ArrayList<Point2D> boundary = new ArrayList<Point2D>();
-			
-			boundary.add(p1);
-			boundary.add(p2);
-			boundary.add(bounds[0]);
-			boundary.add(bounds[1]);
-			boundary.add(bounds[2]);
-			boundary.add(bounds[3]);
+			List<Point2D> positions = voronoiTopology.getPositions();
+			voronoiTopology.addPosition(p1);
+			voronoiTopology.addPosition(p2);
 			
 			// comparateur qui tri les points dans le sens trigonometrique avec l'origine comme centre de rotation
 			Comparator<Point2D> counterClockwiseComparator = new Comparator<Point2D>() {
@@ -166,24 +169,20 @@ public class VoronoiModel extends WorldModel {
 				}
 			};
 			
-			Collections.sort(boundary, counterClockwiseComparator);
+			Collections.sort(positions, counterClockwiseComparator);
 			
 			for (Point2D p : new Point2D[] {p1, p2}) {
-				int offset = boundary.indexOf(p);
-				ArrayList<Point2D> cellule = new ArrayList<Point2D>(4);
-				for (int i = 0; i < boundary.size(); i++) {
-					int index = (i + offset) % boundary.size();
-					Point2D boundary_p = boundary.get(index);
-					cellule.add(boundary_p);
-					if ((boundary_p == p2 || boundary_p == p1) && boundary_p != p) {
-						i = boundary.size();
+				int offset = positions.indexOf(p);
+				int[] indices = new int[4];
+				for (int i = 0; i < positions.size(); i++) {
+					int index = (i + offset) % positions.size();
+					indices[i] = index;
+					Point2D pos = positions.get(index);
+					if ((pos == p2 || pos == p1) && pos != p) {
+						i = positions.size();
 					}
 				}
-				
-				int npoints = cellule.size();
-				Point2D[] celluleArray = new Point2D[npoints];
-				cellule.toArray(celluleArray);
-				voronoiTopology.addPolygon(celluleArray);
+				voronoiTopology.addFace(indices);
 			}
 			
 			return;
@@ -243,7 +242,7 @@ public class VoronoiModel extends WorldModel {
 		public void performed() {
 			init();
 			
-			for (Point2D kernel : kernels.keySet()) {
+			for (Kernel kernel : getKernels()) {
 				run(kernel);
 			}
 			
@@ -256,11 +255,11 @@ public class VoronoiModel extends WorldModel {
 			Point2D min = new Point2D(Integer.MAX_VALUE, Integer.MAX_VALUE);
 			Point2D max = new Point2D(Integer.MIN_VALUE, Integer.MIN_VALUE);
 			
-			for (Point2D p : getKernels()) {
-				min.x = (p.x < min.x ? p.x : min.x);
-				min.y = (p.y < min.y ? p.y : min.y);
-				max.x = (p.x > max.x ? p.x : max.x);
-				max.y = (p.y > max.y ? p.y : max.y);
+			for (Kernel kernel : delaunayTopology.getPositions()) {
+				min.x = (kernel.x < min.x ? kernel.x : min.x);
+				min.y = (kernel.y < min.y ? kernel.y : min.y);
+				max.x = (kernel.x > max.x ? kernel.x : max.x);
+				max.y = (kernel.y > max.y ? kernel.y : max.y);
 			}
 			
 			double dx = max.x - min.x;
@@ -323,9 +322,14 @@ public class VoronoiModel extends WorldModel {
 				}
 			}
 			
+			List<Kernel> positions = delaunayTopology.getPositions();
+			
 			// cree la triangulation de Delaunay
 			for (Triangle triangle : triangles) {
-				delaunayTopology.addTriangle(triangle);
+				int a = positions.indexOf(triangle.getA());
+				int b = positions.indexOf(triangle.getB());
+				int c = positions.indexOf(triangle.getC());
+				delaunayTopology.addTriangle(a, b, c);
 			}
 		}
 	}
@@ -333,39 +337,37 @@ public class VoronoiModel extends WorldModel {
 	/** Private class */
 	private class VoronoiAlgorithm {
 		
-		private TopologyContainer topology;
-		private int triangleCount;
-		
 		/** Constructeur */
 		public VoronoiAlgorithm() {
 			
 		}
 		
 		public void performed() {
-			init();
-			
 			// performed a Voronoi diagram
-			for (Point2D kernel : getKernels()) {
+			for (Kernel kernel : getKernels()) {
 				run(kernel);
 			}
 		}
 		
-		private void init() {
-			topology = getDelaunayTopology();
-			triangleCount = topology.getPolygonsCount();
-		}
-		
-		private void run(Point2D kernel) {
+		private void run(Kernel kernel) {
+			
+			MeshTopology<Kernel> topology = getDelaunayTopology();
+			List<Kernel> positions = getKernels();
+			
 			// parcourir la triangulation de Delaunay et etablir
 			// la liste des triangles adjacent a kernel
 			ArrayList<Triangle> listTriangles = new ArrayList<Triangle>();
-			for (int key = 0; key < triangleCount; key++) {
-				Point2D[] polygon = topology.getPolygon(key);
+			for (primitive.Triangle delaunayTriangle : topology.getTriangles()) {
 				for (int i = 0; i < 3; i++) {
-					if (polygon[i] == kernel) {
-						Point2D a = polygon[i];
-						Point2D b = polygon[(i+1) % 3];
-						Point2D c = polygon[(i+2) % 3];
+					int id = delaunayTriangle.get(i);
+					Kernel k = positions.get(id);
+					if (k == kernel) {
+						int id_a = delaunayTriangle.get(i);
+						int id_b = delaunayTriangle.get((i+1) % 3);
+						int id_c = delaunayTriangle.get((i+2) % 3);
+						Point2D a = positions.get(id_a);
+						Point2D b = positions.get(id_b);
+						Point2D c = positions.get(id_c);
 						Triangle triangle = new Triangle(a, b, c);
 						triangle.orient();
 						listTriangles.add(triangle);
@@ -442,10 +444,19 @@ public class VoronoiModel extends WorldModel {
 				treeMap.put(p, null);
 			}
 			
-			// ajoute le polygone representant la cellule a la topology de voronoi
-			Point2D[] circumCenterArray = new Point2D[npoints];
-			treeMap.keySet().toArray(circumCenterArray);
-			voronoiTopology.addPolygon(circumCenterArray);
+			int[] points = new int[npoints];
+			int i = 0;
+			for (Point2D point : treeMap.keySet()) {
+				int index = voronoiTopology.getPositions().indexOf(point); 
+				if (index == -1) {
+					voronoiTopology.addPosition(point);
+					index = voronoiTopology.getNbPositions() - 1; 
+				}
+				points[i] = index;
+				i++;
+			}
+			
+			voronoiTopology.addFace(points);
 		}
 		
 		private Point2D bBoxIntersection(Point2D kernel, Entry<Point2D, Triangle> entry, boolean reverse) {
