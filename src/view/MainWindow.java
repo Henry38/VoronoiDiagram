@@ -5,6 +5,7 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
+import graphic.Viewer2D;
 import model.VoronoiModel;
 
 public class MainWindow extends JFrame {
@@ -16,7 +17,11 @@ public class MainWindow extends JFrame {
 		super("Voronoi Diagram");
 		
 		VoronoiModel model = new VoronoiModel();
-		JVoronoi jvoronoi = new JVoronoi(model);
+		Viewer2D jvoronoi = new Viewer2D(model, 640, 480);
+		
+		jvoronoi.getCamera().setMoveable(false);
+		jvoronoi.getCamera().setSpinnable(false);
+		jvoronoi.getCamera().setZoomable(false);
 		
 		model.setBounds(jvoronoi.getCamera());
 		
