@@ -3,6 +3,7 @@ package view;
 import java.awt.BorderLayout;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import javax.swing.JSplitPane;
 import javax.swing.SwingUtilities;
 
 import graphic.Viewer2D;
@@ -17,17 +18,22 @@ public class MainWindow extends JFrame {
 		super("Voronoi Diagram");
 		
 		VoronoiModel model = new VoronoiModel();
-		Viewer2D jvoronoi = new Viewer2D(model, 640, 480);
+		Viewer2D viewer = new Viewer2D(model, 640, 480);
+		Viewer2D viewer2 = new Viewer2D(model, 640, 480);
 		
-		jvoronoi.getCamera().setMoveable(false);
-		jvoronoi.getCamera().setSpinnable(false);
-		jvoronoi.getCamera().setZoomable(false);
+		viewer2.removeViewer2DListener(model);
 		
-		model.setBounds(jvoronoi.getCamera());
+		viewer.getCamera().setMoveable(false);
+		viewer.getCamera().setSpinnable(false);
+		viewer.getCamera().setZoomable(false);
+		
+		model.setBounds(viewer.getCamera());
+		
+		JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, viewer, viewer2);
 		
 		JPanel panel = new JPanel();
 		panel.setLayout(new BorderLayout());
-		panel.add(jvoronoi);
+		panel.add(splitPane, BorderLayout.CENTER);
 		setContentPane(panel);
 		
 		pack();
