@@ -11,6 +11,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
 
+import data.WorldModel;
 
 import math2D.Point2D;
 import math2D.Transformation2D;
@@ -20,7 +21,7 @@ import topology.TopologyContainer;
 import topology.Triangle;
 import viewer2D.data.Camera;
 
-public class VoronoiModel {
+public class VoronoiModel extends WorldModel {
 	
 	
 	private Point2D[] bounds;
@@ -99,6 +100,7 @@ public class VoronoiModel {
 		updateDelaunayTriangulation();
 		updateVoronoiDiagram();
 		
+		fireNeedRefresh();
 	}
 	
 	public void addKernel(Point2D p) {
@@ -213,6 +215,11 @@ public class VoronoiModel {
 		}
 		
 		return new Point2D(x + tmin * dx, y + tmin * dy);
+	}
+	
+	@Override
+	public void pointPressed(double x, double y) {
+		addKernel(x, y);
 	}
 	
 	/** Private class */
