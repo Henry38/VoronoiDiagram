@@ -10,6 +10,8 @@ import java.util.List;
 import java.util.Map.Entry;
 
 import data.WorldModel;
+import geometry.Topology2D;
+
 import java.util.TreeMap;
 
 import math2D.Point2D;
@@ -19,6 +21,7 @@ import topology.Edge;
 import topology.MeshTopology;
 import topology.Triangle;
 import viewer2D.data.Camera;
+import view.Voronoi2D;
 
 public class VoronoiModel extends WorldModel {
 	
@@ -50,6 +53,9 @@ public class VoronoiModel extends WorldModel {
 		this.voronoiTopology = new MeshTopology<Point2D>();
 		this.delaunayAlgorithm = new DelaunayAlgorithm();
 		this.voronoiAlgorithm = new VoronoiAlgorithm();
+		
+		this.addDrawable(new Topology2D<Kernel>(delaunayTopology));
+		this.addDrawable(new Voronoi2D<Point2D>(voronoiTopology));
 	}
 	
 	public int getKernelsCount() {
